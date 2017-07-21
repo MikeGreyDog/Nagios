@@ -1,0 +1,86 @@
+---
+  - name: Include vars
+    include_vars:
+      file: vars.yml
+
+  - name: Install repository
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - "http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
+      - "http://rpms.famillecollet.com/enterprise/remi-release-6.rpm"
+
+  - name: Install Nagios-server packages
+    yum: 
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - nagios
+      - nagios-plugins-all
+      - nagios-plugins-nrpe
+      - nrpe
+      - php
+      - httpd
+      - python-pip
+      - libselinux-python
+
+  - name: Install python packages
+    command: pip install {{ item }}
+    with_items:
+      - pexpect
+
+  - name: Set paswword protection for Nagios user
+    expect:
+      command: htpasswd -c /etc/nagios/passwd nagiosadmin
+      responses:
+        'New password': "{{ nagios_password }}"
+        'Re-type new password': "{{ nagios_password }}"
+      timeout: 60
+
+  - name: Add clients configurations
+    lineinfile:
+      path: /etc/nagios/nagios.cfg
+      line: "cfg_dir=/etc/nagios/servers"
+
+  - name: Create folder for servers
+    file:
+      path: /etc/nagios/servers
+      state: directory 
+
+  - debug:
+      msg: "{{ groups['Nagios-clients'] }}"
+
+  - name: Copy clients configurations
+    template:
+      src: client.j2
+      dest: /etc/nagios/servers/{{ item }}.cfg
+    with_items:
+      - "{{ groups['Nagios-clients'] }}"
+
+  - name: Add email address for notifications
+    lineinfile:
+      path: /etc/nagios/objects/contacts.cfg
+      regexp: '        email'
+      line: '        email            {{ admin_email }}'
+
+  - name: Disable selinux
+    selinux:
+      state: disabled
+    register: was_enabled
+
+  - shell: setenforce 0
+    sudo: yes
+    ignore_errors: True
+    when: was_enabled.changed
+
+
+  - name: Start Nagios and httpd services
+    service:
+      name: "{{ item }}"
+      state: restarted
+      enabled: yes
+    with_items:
+      - nagios
+      - httpd
+
