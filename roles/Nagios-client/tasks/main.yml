@@ -22,8 +22,38 @@
       src: nrpe.cfg.j2
       dest: /etc/nagios/nrpe.cfg
 
+  - name: Add http index file
+    file:
+      path: /var/www/html/index.html
+      state: touch
+      mode: 0755
+
+  - name: Add sudo rights for nrpe
+    blockinfile:
+      path: /etc/sudoers
+      block: |
+       ## Allow NRPE to restart sevices
+       Defaults:nagios !requiretty
+       nagios    ALL=(ALL)    NOPASSWD: /sbin/service 
+
+  - name: Disable selinux
+    selinux:
+      state: disabled
+    register: was_enabled
+
+  - shell: setenforce 0
+    sudo: yes
+    ignore_errors: True
+    when: was_enabled.changed
+
+
   - name: Start Nagios client
     service:
-      name: nrpe
+      name: "{{ item }}"
       state: restarted
       enabled: yes
+    with_items:
+      - nrpe
+      - httpd
+
+

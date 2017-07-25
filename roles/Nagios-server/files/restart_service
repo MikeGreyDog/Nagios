@@ -1,0 +1,40 @@
+#!/bin/sh
+#
+# Event handler script for restarting the web server on the local machine
+#
+# What state is the HTTP service in?
+case "$1" in
+OK)
+	;;
+WARNING)
+	;;
+UNKNOWN)
+	;;
+CRITICAL)
+	# Is this a "soft" or a "hard" state?
+	case "$2" in
+
+	# check before it turns into a "hard" state and contacts get notified...
+	SOFT)
+
+		# check, because it may just be a fluke!
+		case "$3" in
+
+		# fixed the problem!
+		1)
+			echo -n "Restarting $6 service (3rd soft critical state)..."
+			# Call the init script to restart the HTTPD server
+			 /usr/lib64/nagios/plugins/check_nrpe -H $4 -c restart-$5
+			;;
+			esac
+		;;
+
+	HARD)
+		echo -n "Restarting $6 service..."
+		# Call the init script to restart the HTTPD server
+		 /usr/lib64/nagios/plugins/check_nrpe -H $4 -c restart-$5
+		;;
+	esac
+	;;
+esac
+exit 0

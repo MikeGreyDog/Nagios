@@ -11,6 +11,7 @@ define service {
         service_description             PING
         check_command                   check_ping!100.0,20%!500.0,60%
         notifications_enabled           1
+        contacts                        {{ contact }}
         }
 
 define service {
@@ -19,6 +20,7 @@ define service {
         service_description             SSH
         check_command                   check_ssh
         notifications_enabled           1
+        contacts                        {{ contact }}
         }
 
 define service {
@@ -26,4 +28,68 @@ define service {
         host_name                       {{ item }}
         service_description             Current Load
         check_command                   check_local_load!5.0,4.0,3.0!10.0,6.0,4.0
+        notifications_enabled           1
+        contacts                        {{ contact }}
+
         }
+
+define service{
+        use                             generic-service         ; Name of service template to use
+        host_name                       {{ item }}
+        service_description             Swap Usage
+        check_command                   check_local_swap!20!10
+        notifications_enabled           1
+        contacts                        {{ contact }}
+
+        }
+
+define service{
+        use                             generic-service         ; Name of service template to use
+        host_name                       {{ item }}
+        service_description             Check disk
+        check_command                   check_disk!50!50!200!200
+        notifications_enabled           1
+        contacts                        {{ contact }}
+
+        }
+
+define service{
+        use                             generic-service         ; Name of servi$
+        host_name                       {{ item }}
+        service_description             HTTP
+        check_command                   check_http
+        event_handler_enabled           1
+        event_handler                   restart_service!httpd
+        }
+
+define service{
+        use                             generic-service         ; Name of servi$
+        host_name                       {{ item }}
+        service_description             Check httpd processes
+        check_command                   check_service_procs!3:50!1:100!httpd
+        notifications_enabled           1
+        contacts                        {{ contact }}
+        event_handler_enabled           1
+        event_handler                   restart_service!httpd
+        }
+
+define service{
+        use                             generic-service         ; Name of servi$
+        host_name                       {{ item }}
+        service_description             Check zombies
+        check_command                   check_zombie_procs
+        notifications_enabled           1
+        contacts                        {{ contact }}
+
+        }
+
+define service{
+        use                             generic-service         ; Name of servi$
+        host_name                       {{ item }}
+        service_description             Check RAM memory
+        check_command                   check_mem!20!10
+        notifications_enabled           1
+        contacts                        {{ contact }}
+
+        }
+

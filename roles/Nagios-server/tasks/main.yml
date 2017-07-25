@@ -1,7 +1,10 @@
 ---
   - name: Include vars
     include_vars:
-      file: vars.yml
+      file: "{{ item }}"
+    with_items:
+      - vars.yml
+      - /home/ansible/nagios/roles/PostgreSQL/vars/main.yml
 
   - name: Install repository
     yum:
@@ -49,7 +52,8 @@
       state: directory 
 
   - debug:
-      msg: "{{ groups['Nagios-clients'] }}"
+      msg: "Following clients will be configured:
+            {{ groups['Nagios-clients'] }}"
 
   - name: Copy clients configurations
     template:
@@ -63,6 +67,26 @@
       path: /etc/nagios/objects/contacts.cfg
       regexp: '        email'
       line: '        email            {{ admin_email }}'
+
+  - name: Copy additional plugins
+    copy:
+      src: check_mem
+      dest: /usr/lib64/nagios/plugins/.
+      mode: 0755
+
+  - name: Copy additional handlers
+    copy:
+      src: restart_service
+      dest: /usr/lib64/nagios/plugins/eventhandlers/.
+      mode: 0755
+
+
+  - name: Add commands
+    blockinfile:
+      path: /etc/nagios/objects/commands.cfg
+      block: "{{ item }}"
+    with_items:
+      - "{{ commands }}"
 
   - name: Disable selinux
     selinux:

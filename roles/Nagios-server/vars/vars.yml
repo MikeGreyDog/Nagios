@@ -1,3 +1,26 @@
 nagios_password: "1q2w3e4r5t"
 admin_email: "mtitko.gd@gmail.com"
+contact: nagiosadmin
 
+commands: " 
+              define command{\n
+        command_name    check_disk\n
+        command_line    /usr/lib64/nagios/plugins/check_disk -w $ARG1$ -c $ARG2$ -C -w $ARG3$ -c $ARG4$\n
+           }\n 
+              define command{\n
+        command_name    check_zombie_procs\n
+        command_line   /usr/lib64/nagios/plugins/check_procs -w 5 -c 10 -s Z\n
+           }\n
+              define command{\n
+        command_name    check_mem\n
+        command_line   /usr/lib64/nagios/plugins/check_mem -f -w $ARG1$ -c $ARG2$\n
+           }\n
+              define command{\n
+        command_name    check_service_procs\n
+        command_line   /usr/lib64/nagios/plugins/check_procs -w $ARG1$ -c $ARG2$ -C $ARG3$\n
+           }\n
+              define command{\n
+        command_name    restart_service\n
+        command_line   /usr/lib64/nagios/plugins/eventhandlers/restart_service $SERVICESTATE$ $SERVICESTATETYPE$ $SERVICEATTEMPT$ $HOSTADDRESS$ $ARG1$ $SERVICEDESC$\n
+           }"
+           
